@@ -21,7 +21,6 @@ const features = [
         icon: Radar,
         title: "Smart Detection",
         desc: "AI-powered route monitoring.",
-        gradient: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)", // refined
         gradient: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)",
         color: "#059669"
     },

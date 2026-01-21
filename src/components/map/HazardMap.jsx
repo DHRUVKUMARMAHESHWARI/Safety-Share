@@ -2,114 +2,286 @@ import { useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import PropTypes from 'prop-types';
-import styles from './HazardMap.module.css';
+import 'leaflet/dist/leaflet.css';
 
-// Fix for default Leaflet marker icons not loading in webpack/vite environments sometimes
-// (Though we are using divIcons, good to have just in case)
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+// Custom dark mode tile layer
+const DARK_MODE_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const DARK_MODE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
+const defaultCenter = [28.6139, 77.2090];
 
-const defaultCenter = [28.6139, 77.2090]; // New Delhi [lat, lng]
+// Map updater for smooth animations
+const MapUpdater = ({ center, selectedHazard }) => {
+  const map = useMap();
 
-// Component to handle map center updates
-const MapUpdater = ({ center }) => {
-    const map = useMap();
-    useEffect(() => {
-        if (center) {
-            map.setView(center, map.getZoom()); // Keep current zoom
-        }
-    }, [center, map]);
-    return null;
+  useEffect(() => {
+    if (selectedHazard) {
+      const pos = [
+        selectedHazard.location.coordinates[1],
+        selectedHazard.location.coordinates[0],
+      ];
+      map.flyTo(pos, 17, { duration: 1.5 });
+    } else if (center) {
+      map.flyTo(center, map.getZoom(), { duration: 1 });
+    }
+  }, [center, selectedHazard, map]);
+
+  return null;
 };
 
 MapUpdater.propTypes = {
-    center: PropTypes.arrayOf(PropTypes.number)
+  center: PropTypes.array,
+  selectedHazard: PropTypes.object,
 };
 
-const HazardMap = ({ 
-    userLocation, 
-    hazards, 
-    onMapLoad, 
-    onMarkerClick, 
-    selectedHazard 
+// Main map content component
+const MapContent = ({
+  center,
+  hazards,
+  userLocation,
+  selectedHazard,
+  onMarkerClick,
+  mapRef,
 }) => {
-  const mapRef = useRef(null);
-
-  // Convert userLocation obj {lat, lng} to array [lat, lng]
-  const center = userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter;
-
+  // Create pulse circle markers for hazards
   const getMarkerIcon = (type, severity) => {
-      let color = '#ef4444';
-      if (type === 'pothole') color = '#f97316';
-      if (type === 'construction') color = '#eab308';
-      if (type === 'police_checking') color = '#3b82f6';
-      if (type === 'waterlogging') color = '#06b6d4';
-      
-      const size = severity === 'critical' ? 24 : severity === 'high' ? 20 : 16;
-      
-      return L.divIcon({
-          className: styles.customMarker,
-          html: `<div class="${styles.markerCircle}" style="background-color: ${color}; width: ${size}px; height: ${size}px;"></div>`,
-          iconSize: [size, size],
-          iconAnchor: [size/2, size/2] // Center
-      });
+    let color = '#EF4444'; // Default red for accidents
+    
+    if (type === 'pothole' || type === 'roadblock') color = '#F59E0B'; // Amber
+    if (type === 'police' || type === 'police_checking') color = '#3B82F6'; // Blue
+    if (type === 'waterlogging') color = '#06B6D4'; // Cyan
+
+    const size = severity === 'critical' ? 28 : severity === 'high' ? 24 : 20;
+    const pulseAnimation = severity === 'critical' || severity === 'high';
+
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div class="marker-container">
+          <div class="marker-pulse ${pulseAnimation ? 'animate-pulse-ring' : ''}" 
+               style="background-color: ${color}; width: ${size}px; height: ${size}px;">
+          </div>
+          <div class="marker-glow" 
+               style="background-color: ${color}; width: ${size}px; height: ${size}px; 
+                      filter: blur(8px) drop-shadow(0 0 12px ${color});">
+          </div>
+        </div>
+      `,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
   };
 
+  // User location marker - pulsing blue dot
   const userIcon = L.divIcon({
-      className: styles.customMarker,
-      html: `<div class="${styles.userLocationMarker}"></div>`,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
+    className: 'custom-marker',
+    html: `
+      <div class="user-marker-container">
+        <div class="user-marker-pulse"></div>
+        <div class="user-marker-dot"></div>
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 
   return (
-    <div className={styles.mapContainer}>
-        <MapContainer 
-            center={center} 
-            zoom={15} 
-            style={{ width: '100%', height: '100%' }}
-            zoomControl={false}
-            ref={mapRef}
-            whenCreated={(map) => {
-                mapRef.current = map;
-                if (onMapLoad) onMapLoad(map);
-            }}
-        >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            <MapUpdater center={!selectedHazard ? center : null} />
+    <>
+      {/* Dark Mode Tile Layer */}
+      <TileLayer
+        attribution={DARK_MODE_ATTRIBUTION}
+        url={DARK_MODE_TILES}
+      />
 
-            {/* User Location Marker */}
-            {userLocation && (
-                <Marker 
-                    position={[userLocation.lat, userLocation.lng]} 
-                    icon={userIcon}
-                />
-            )}
+      <MapUpdater
+        center={!selectedHazard ? center : null}
+        selectedHazard={selectedHazard}
+      />
 
-            {/* Hazard Markers */}
-            {hazards.map((hazard) => (
-                <Marker
-                    key={hazard._id}
-                    position={[hazard.location.coordinates[1], hazard.location.coordinates[0]]}
-                    icon={getMarkerIcon(hazard.type, hazard.severity)}
-                    eventHandlers={{
-                        click: () => onMarkerClick(hazard),
-                    }}
-                />
-            ))}
-        </MapContainer>
+      {/* User Location Marker */}
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={userIcon}
+          zIndexOffset={1000}
+        />
+      )}
+
+      {/* Hazard Markers */}
+      {hazards.map((hazard) => (
+        <Marker
+          key={hazard._id}
+          position={[
+            hazard.location.coordinates[1],
+            hazard.location.coordinates[0],
+          ]}
+          icon={getMarkerIcon(hazard.type, hazard.severity)}
+          eventHandlers={{
+            click: () => {
+              if (onMarkerClick) onMarkerClick(hazard);
+              if (mapRef.current) {
+                mapRef.current.flyTo(
+                  [
+                    hazard.location.coordinates[1],
+                    hazard.location.coordinates[0],
+                  ],
+                  17,
+                  { duration: 1.5 }
+                );
+              }
+            },
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
+MapContent.propTypes = {
+  center: PropTypes.array,
+  hazards: PropTypes.array,
+  userLocation: PropTypes.object,
+  selectedHazard: PropTypes.object,
+  onMarkerClick: PropTypes.func,
+  mapRef: PropTypes.object,
+};
+
+const HazardMap = ({
+  userLocation,
+  hazards = [],
+  onMapLoad,
+  onMarkerClick,
+  selectedHazard,
+}) => {
+  const mapRef = useRef(null);
+
+  const center = userLocation
+    ? [userLocation.lat, userLocation.lng]
+    : defaultCenter;
+
+  return (
+    <div className="absolute inset-0 w-full h-full">
+      <MapContainer
+        center={center}
+        zoom={15}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+        attributionControl={false}
+        whenCreated={(map) => {
+          mapRef.current = map;
+          if (onMapLoad) onMapLoad(map);
+        }}
+      >
+        <MapContent
+          center={center}
+          hazards={hazards}
+          userLocation={userLocation}
+          selectedHazard={selectedHazard}
+          onMarkerClick={onMarkerClick}
+          mapRef={mapRef}
+        />
+      </MapContainer>
+
+      {/* Custom CSS for markers */}
+      <style jsx global>{`
+        /* Hazard Marker Styles */
+        .custom-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+
+        .marker-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .marker-pulse {
+          position: absolute;
+          border-radius: 50%;
+          opacity: 0.8;
+          z-index: 2;
+        }
+
+        .marker-glow {
+          position: absolute;
+          border-radius: 50%;
+          opacity: 0.4;
+          z-index: 1;
+        }
+
+        .animate-pulse-ring {
+          animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(1.3);
+            opacity: 0.4;
+          }
+        }
+
+        /* User Location Marker */
+        .user-marker-container {
+          position: relative;
+          width: 24px;
+          height: 24px;
+        }
+
+        .user-marker-pulse {
+          position: absolute;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background-color: rgba(59, 130, 246, 0.3);
+          animation: user-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .user-marker-dot {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background-color: #3B82F6;
+          border: 3px solid white;
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+          z-index: 10;
+        }
+
+        @keyframes user-pulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.6;
+          }
+          50% {
+            transform: scale(1.8);
+            opacity: 0;
+          }
+        }
+
+        /* Map Container Styling */
+        .leaflet-container {
+          background: #0D0D0D !important;
+        }
+
+        .leaflet-tile-pane {
+          filter: brightness(0.9) contrast(1.1);
+        }
+
+        /* Remove default Leaflet controls */
+        .leaflet-control-zoom,
+        .leaflet-control-attribution {
+          display: none !important;
+        }
+      `}</style>
     </div>
   );
 };
@@ -120,7 +292,6 @@ HazardMap.propTypes = {
   onMapLoad: PropTypes.func,
   onMarkerClick: PropTypes.func,
   selectedHazard: PropTypes.object,
-  onCloseInfo: PropTypes.func
 };
 
 export default HazardMap;

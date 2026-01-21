@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
+import MainLayout from './components/layout/MainLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -61,52 +62,54 @@ AdminRoute.propTypes = {
 
 const AppRoutes = () => {
     return (
-      <>
+      <MainLayout>
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/map" element={<MapPage />} />
-          
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-
-          <Route
-             path="/profile"
-             element={
-                 <ProtectedRoute>
-                     <Profile />
-                 </ProtectedRoute>
-             }
-           />
-
-           <Route
-              path="/leaderboard"
+        <div className="pt-16 fade-in">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/map" element={<MapPage />} />
+            
+            <Route 
+              path="/dashboard" 
               element={
-                  <ProtectedRoute>
-                      <Leaderboard />
-                  </ProtectedRoute>
-              }
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
             />
-          
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                  <Admin />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+
+            <Route
+               path="/profile"
+               element={
+                   <ProtectedRoute>
+                       <Profile />
+                   </ProtectedRoute>
+               }
+             />
+
+             <Route
+                path="/leaderboard"
+                element={
+                    <ProtectedRoute>
+                        <Leaderboard />
+                    </ProtectedRoute>
+                }
+              />
+            
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                    <Admin />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </div>
         <BottomNav />
-      </>
+      </MainLayout>
     );
 };
 

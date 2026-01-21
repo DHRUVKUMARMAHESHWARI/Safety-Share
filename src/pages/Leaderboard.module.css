@@ -1,0 +1,259 @@
+/* Leaderboard Layout */
+.container {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding-bottom: 60px;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
+    padding: 80px 20px 120px; /* Extra bottom padding for podium overlap */
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.titleWrapper {
+    position: relative;
+    z-index: 10;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.header p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Podium Section */
+.podiumSection {
+    margin-top: -80px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.podium {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+}
+
+.podiumStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.step2 { order: 1; z-index: 2; margin-right: -10px; }
+.step1 { order: 2; z-index: 3; margin-bottom: 20px; }
+.step3 { order: 3; z-index: 1; margin-left: -10px; }
+
+.podiumAvatarWrapper {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.podiumAvatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #4f46e5;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.crown {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+}
+
+.step1 .podiumAvatar { width: 100px; height: 100px; border: 4px solid #fbbf24; }
+.step2 .podiumAvatar { border: 4px solid #9ca3af; }
+.step3 .podiumAvatar { border: 4px solid #b45309; }
+
+.podiumBlock {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px 8px;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.step1 .podiumBlock { height: 180px; background: linear-gradient(to bottom, #fcd34d, #f59e0b); }
+.step2 .podiumBlock { height: 140px; background: linear-gradient(to bottom, #d1d5db, #9ca3af); }
+.step3 .podiumBlock { height: 110px; background: linear-gradient(to bottom, #fdba74, #b45309); }
+
+.rankNum { font-size: 2.5rem; font-weight: 800; opacity: 0.5; margin-bottom: 4px; }
+.uName { font-weight: 700; font-size: 0.9rem; text-align: center; margin-bottom: 4px; }
+.uPoints { font-size: 0.8rem; opacity: 0.9; }
+
+/* Main Grid Layout */
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Left Column: Leaderboard List */
+.filterBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+.tabs { display: flex; gap: 8px; }
+
+.tabBtn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tabBtn:hover { background: #f3f4f6; }
+.activeTab { background: #eef2ff !important; color: #4f46e5 !important; }
+
+.lList { display: flex; flex-direction: column; gap: 10px; }
+
+.lRow {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.lRow:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+.rankCol {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #6b7280;
+    margin-right: 16px;
+}
+
+.userCol {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.rowAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.nameInfo { display: flex; flex-direction: column; }
+.nameInfo strong { color: #1f2937; }
+.badge { font-size: 0.75rem; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+
+.pointsCol { text-align: right; min-width: 80px; }
+.pointsCol strong { display: block; color: #4f46e5; font-size: 1.1rem; }
+.trend { font-size: 0.75rem; display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+
+.currentUserRow {
+    background: linear-gradient(to right, #eef2ff, white);
+    border: 1px solid #c7d2fe;
+}
+
+/* Sidebar Stats */
+.statCard {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.statCard h3 { margin: 0 0 16px 0; font-size: 1.1rem; color: #1f2937; }
+
+.rankBox { text-align: center; margin-bottom: 20px; }
+.bigRank { font-size: 3rem; font-weight: 800; color: #1f2937; line-height: 1; }
+.rankSub { color: #6b7280; font-size: 0.9rem; }
+
+.challengeBox {
+    background: #fdf2f8; /* Pink/Rose tint */
+    border: 1px solid #fbcfe8;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.challengeTitle { color: #be185d; font-weight: 700; margin-bottom: 8px; }
+.progressBar { height: 8px; background: #fbcfe8; border-radius: 4px; margin: 12px 0 8px; overflow: hidden; }
+.progressFill { height: 100%; background: #db2777; width: 70%; }
+
+.communityCard { overflow: hidden; }
+.featuredUser { text-align: center; padding: 10px; }
+.fAvatar { width: 64px; height: 64px; border-radius: 50%; background: #ddd; margin: 0 auto 10px; }
+
+@keyframes bounce {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, -10px); }
+}
+
+@media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .podium { transform: scale(0.9); }
+    .header { padding-bottom: 100px; }
+    .filterBar { flex-direction: column; align-items: flex-start; gap: 10px; }
+}

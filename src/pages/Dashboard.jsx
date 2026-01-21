@@ -1,254 +1,157 @@
-import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { FaTrophy, FaMedal, FaCar, FaMapMarkedAlt, FaCheckDouble, FaExclamationTriangle, FaBell, FaCog } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getDashboardData } from '../services/communityService';
-import styles from './Dashboard.module.css';
+import { motion } from 'framer-motion';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { AlertTriangle, Shield, TrendingUp, MapPin, Award } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getUserStats } from '../services/gamificationService';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({
-      user: null,
-      recentReports: [],
-      activityData: [],
-      leaderboard: [] // Placeholder if we want to show it here
+  const [stats, setStats] = useState({
+    points: 0,
+    level: 'Rookie',
+    reports: 0,
+    alertsRecieved: 0,
+    nextLevelPoints: 1000
   });
 
+  // Mock data for visual dev
   useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const res = await getDashboardData();
-            if (res.success) {
-                setData(prev => ({
-                    ...prev,
-                    user: res.data.user,
-                    recentReports: res.data.recentReports,
-                    activityData: res.data.activityData
-                }));
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-    fetchData();
+    // In real app, fetch from API
+    setTimeout(() => {
+        setStats({
+            points: 1250,
+            level: 'Scout',
+            reports: 42,
+            alertsRecieved: 128,
+            nextLevelPoints: 2000
+        });
+    }, 500);
   }, []);
-  
-  const containerVariants = {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
 
-  const itemVariants = {
-      hidden: { y: 20, opacity: 0 },
-      visible: { y: 0, opacity: 1 }
-  };
-
-  if (loading) {
-      return (
-          <div className={styles.dashboardContainer} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div className="skeleton" style={{ width: '100px', height: '100px', borderRadius: '50%' }}></div>
-          </div>
-      );
-  }
-
-  const { user: stats, recentReports, activityData } = data;
+  const progress = (stats.points / stats.nextLevelPoints) * 100;
 
   return (
-    <div className={styles.dashboardContainer}>
-      {/* 1. Header Section */}
-      <header className={styles.header}>
-          <div className={styles.headerContent}>
-              <div className={styles.userInfo}>
-                  <div className={styles.avatarRing}>
-                      <div className={styles.avatar}>
-                          {user?.name?.charAt(0) || 'U'}
-                      </div>
-                  </div>
-                  <div className={styles.userDetails}>
-                      <h1>{user?.name || 'Safe Driver'}</h1>
-                      <div className={styles.levelBadge}>
-                          <FaMedal color="#fcd34d" /> Level {stats?.level || 1} Scout
-                      </div>
-                      <div className={styles.xpContainer}>
-                          <div className={styles.xpBar}>
-                              <motion.div 
-                                className={styles.xpProgress} 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(stats?.xp % 500) / 5}%` }}
-                                transition={{ duration: 1, delay: 0.5 }}
-                              ></motion.div>
-                          </div>
-                          <small style={{ opacity: 0.8 }}>{stats?.xp || 0} XP</small>
-                      </div>
-                  </div>
+    <div className="min-h-screen bg-bg-primary pt-24 pb-28 px-4 font-sans text-white">
+      
+      {/* Cinematic Background Glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-accent-violet/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-accent-danger/5 rounded-full blur-[80px]"></div>
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto space-y-8">
+        
+        {/* Header Section */}
+        <header className="flex items-center justify-between">
+           <div>
+             <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+               Dashboard
+             </h1>
+             <p className="text-text-secondary mt-1">Welcome back, {user?.name}</p>
+           </div>
+           
+           <div className="flex items-center space-x-2 glass-dock px-4 py-2">
+             <Shield className="text-accent-violet" size={18} />
+             <span className="font-bold text-sm tracking-wide">{stats.level.toUpperCase()}</span>
+           </div>
+        </header>
+
+        {/* Level Progress Card */}
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between"
+        >
+           <div className="flex items-center space-x-6 mb-6 md:mb-0">
+              <div className="w-24 h-24 md:w-32 md:h-32 shadow-[0_0_30px_rgba(139,92,246,0.3)] rounded-full text-center">
+                 <CircularProgressbar
+                    value={progress}
+                    text={`${Math.round(progress)}%`}
+                    styles={buildStyles({
+                        textSize: '22px',
+                        pathColor: '#8B5CF6',
+                        textColor: '#FFFFFF',
+                        trailColor: 'rgba(255, 255, 255, 0.1)',
+                        pathTransitionDuration: 1.5,
+                    })}
+                 />
               </div>
-
-              <div className={styles.quickStats}>
-                  {[
-                      { label: 'Reports', value: stats?.stats?.reportsCount || 0, color: '#10b981' },
-                      { label: 'Validations', value: stats?.stats?.validationsCount || 0, color: '#6366f1' },
-                      { label: 'Alerts', value: stats?.stats?.alertsReceived || 0, color: '#f59e0b' }
-                  ].map((stat, i) => (
-                      <motion.div 
-                         key={i} 
-                         className={styles.statCard}
-                         initial={{ scale: 0.8, opacity: 0 }}
-                         animate={{ scale: 1, opacity: 1 }}
-                         transition={{ delay: 0.3 + (i * 0.1) }}
-                      >
-                          <span className={styles.statValue} style={{ color: stat.color }}>{stat.value}</span>
-                          <span className={styles.statLabel}>{stat.label}</span>
-                      </motion.div>
-                  ))}
+              <div>
+                 <h2 className="text-2xl font-bold text-white mb-1">Level Progress</h2>
+                 <p className="text-text-secondary text-sm">
+                    {stats.points} / {stats.nextLevelPoints} XP to next level
+                 </p>
               </div>
-          </div>
-      </header>
+           </div>
 
-      {/* 2. Main Content Grid */}
-      <motion.div 
-         className={styles.gridContainer}
-         variants={containerVariants}
-         initial="hidden"
-         animate="visible"
-      >
-          {/* COLUMN 1 */}
-          <div className={styles.gridColumn}>
-              {/* Activity Chart */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}>Your Activity</h3>
-                  <div style={{ height: 200, width: '100%' }}>
-                      <ResponsiveContainer>
-                          <AreaChart data={activityData}>
-                              <defs>
-                                <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <Tooltip />
-                              <Area type="monotone" dataKey="val" stroke="#6366f1" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
-                              <Area type="monotone" dataKey="reports" stroke="#f97316" fill="transparent" strokeWidth={3} />
-                          </AreaChart>
-                      </ResponsiveContainer>
-                  </div>
-              </motion.div>
+           <div className="flex space-x-4">
+              <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10 min-w-[100px]">
+                 <TrendingUp className="mx-auto text-accent-violet mb-2" size={24} />
+                 <div className="text-2xl font-bold">{stats.points}</div>
+                 <div className="text-xs text-text-secondary">Total XP</div>
+              </div>
+              <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10 min-w-[100px]">
+                 <Award className="mx-auto text-accent-danger mb-2" size={24} />
+                 <div className="text-2xl font-bold">12</div>
+                 <div className="text-xs text-text-secondary">Badges</div>
+              </div>
+           </div>
+        </motion.div>
 
-              {/* Achievements */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}><FaTrophy color="#f59e0b" /> Achievements</h3>
-                  <div className={styles.badgeGrid}>
-                      {(stats?.achievements || []).length > 0 ? stats.achievements.map((badge, i) => (
-                          <div key={i} className={`${styles.badge} ${styles.badgeUnlocked}`}>
-                              <span className={styles.badgeIcon}>🏆</span>
-                              <small style={{ fontSize: '0.7rem' }}>{badge.achievementId}</small>
-                          </div>
-                      )) : (
-                          <p style={{ gridColumn: 'span 3', textAlign: 'center', opacity: 0.5, padding: '20px' }}>No achievements yet. Keep reporting!</p>
-                      )}
-                  </div>
-              </motion.div>
-          </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard icon={AlertTriangle} label="Hazards Reported" value={stats.reports} color="#F59E0B" delay={0.1} />
+            <StatsCard icon={Shield} label="Alerts Received" value={stats.alertsRecieved} color="#8B5CF6" delay={0.2} />
+            <StatsCard icon={MapPin} label="Km Traveled" value="1,240" color="#3B82F6" delay={0.3} />
+            <StatsCard icon={Award} label="Safety Score" value="98" color="#10B981" delay={0.4} />
+        </div>
 
-          {/* COLUMN 2 */}
-          <div className={styles.gridColumn}>
-              {/* Recent Reports */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}>Recent Reports</h3>
-                  <div className={styles.reportList}>
-                      {recentReports.length > 0 ? recentReports.map((r, i) => (
-                          <div key={i} className={styles.reportItem}>
-                              <div className={styles.reportIcon} style={{ background: r.type === 'pothole' ? '#f97316' : '#ef4444' }}>
-                                 <FaExclamationTriangle size={14} />
-                              </div>
-                              <div className={styles.reportInfo}>
-                                  <div className={styles.reportType}>{r.type.replace('_', ' ')}</div>
-                                  <div className={styles.reportLoc}>{r.location.coordinates[1].toFixed(4)}, {r.location.coordinates[0].toFixed(4)}</div>
-                              </div>
-                              <span className={`${styles.statusBadge} ${styles['status-'+r.status]}`}>
-                                  {r.status}
-                              </span>
-                          </div>
-                      )) : (
-                          <p style={{ textAlign: 'center', opacity: 0.5 }}>No recent reports.</p>
-                      )}
-                  </div>
-              </motion.div>
+        {/* Recent Activity (Mock) */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.5 }}
+           className="glass-card rounded-3xl p-6"
+        >
+           <h3 className="text-xl font-bold mb-6">Recent Activity</h3>
+           <div className="space-y-4">
+              {[1, 2, 3].map((_, i) => (
+                 <div key={i} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                    <div className="flex items-center space-x-4">
+                       <div className="w-10 h-10 rounded-full bg-accent-violet/20 flex items-center justify-center text-accent-violet">
+                          <AlertTriangle size={20} />
+                       </div>
+                       <div>
+                          <p className="font-semibold text-white">Reported a Pothole</p>
+                          <p className="text-xs text-text-secondary">2 hours ago • Verified by 3 users</p>
+                       </div>
+                    </div>
+                    <div className="text-accent-violet font-bold text-sm">+50 XP</div>
+                 </div>
+              ))}
+           </div>
+        </motion.div>
 
-              {/* Leaderboard - Link to full leaderboard */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}>Community</h3>
-                  <div style={{ textAlign: 'center', padding: '20px' }}>
-                      <FaTrophy size={48} color="#fcd34d" style={{ marginBottom: '16px' }} />
-                      <p>View how you rank against other road guardians.</p>
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ width: '100%', marginTop: '16px' }}
-                        onClick={() => navigate('/leaderboard')}
-                      >
-                          View Leaderboard
-                      </button>
-                  </div>
-              </motion.div>
-          </div>
-
-          {/* COLUMN 3 */}
-          <div className={styles.gridColumn}>
-              {/* Quick Actions */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}>Quick Actions</h3>
-                  <div className={styles.quickActionsGrid}>
-                      <Link to="/map" className={styles.actionBtn}>
-                          <FaMapMarkedAlt size={24} color="#6366f1" />
-                          <span>View Map</span>
-                      </Link>
-                      <button className={styles.actionBtn} onClick={() => navigate('/map?report=true')}>
-                          <FaExclamationTriangle size={24} color="#f97316" />
-                          <span>New Report</span>
-                      </button>
-                      <button className={styles.actionBtn} onClick={() => navigate('/map?validate=true')}>
-                          <FaCheckDouble size={24} color="#10b981" />
-                          <span>Validate</span>
-                      </button>
-                      <button className={styles.actionBtn} onClick={() => navigate('/profile')}>
-                          <FaCog size={24} color="#6b7280" />
-                          <span>Settings</span>
-                      </button>
-                  </div>
-              </motion.div>
-
-              {/* Impact Stats */}
-              <motion.div className={styles.dashCard} variants={itemVariants}>
-                  <h3 className={styles.cardTitle}>Your Impact</h3>
-                  <div className={styles.statsGrid}>
-                      <div className={styles.impactCard}>
-                          <div className={styles.impactValue}>{stats?.stats?.kmDriven || 0}</div>
-                          <div className={styles.impactLabel}>Km Driven</div>
-                      </div>
-                      <div className={styles.impactCard}>
-                          <div className={styles.impactValue}>{stats?.stats?.reportsCount || 0}</div>
-                          <div className={styles.impactLabel}>Hazards</div>
-                      </div>
-                      <div className={styles.impactCard}>
-                          <div className={styles.impactValue}>{stats?.points || 0}</div>
-                          <div className={styles.impactLabel}>Points</div>
-                      </div>
-                      <div className={styles.impactCard}>
-                          <div className={styles.impactValue}>Lvl {stats?.level || 1}</div>
-                          <div className={styles.impactLabel}>Rank</div>
-                      </div>
-                  </div>
-              </motion.div>
-          </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
 
-export default Dashboard;
+const StatsCard = ({ icon: Icon, label, value, color, delay }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay }}
+      className="glass-card p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 hover:bg-white/5 transition-colors"
+    >
+        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-1" style={{ backgroundColor: `${color}20`, color: color }}>
+            <Icon size={20} />
+        </div>
+        <div className="text-3xl font-extrabold text-white">{value}</div>
+        <div className="text-xs font-bold text-text-secondary uppercase tracking-wider">{label}</div>
+    </motion.div>
+);
 
+export default Dashboard;

@@ -1,7 +1,21 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) {
+    // If we're in production, default to relative /api path
+    // If in development, default to localhost:5000/api
+    return import.meta.env.MODE === 'production' 
+      ? '/api' 
+      : 'http://localhost:5000/api';
+  }
+  
+  // Ensure the URL ends with /api if it doesn't already
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },

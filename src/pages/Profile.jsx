@@ -1,238 +1,138 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Settings, Shield, MapPin, Award, CheckCircle, TrendingUp, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaUser, FaLock, FaBell, FaShieldAlt, FaMoon, FaGlobe, FaEdit, FaCamera, FaSave, FaTrash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import Select from 'react-select';
-import toast from 'react-hot-toast';
-import styles from './Profile.module.css';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
-  const { user, updateUserProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState('account');
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-      name: '',
-      phone: '',
-      vehicleType: 'car',
-      licenseNumber: ''
-  });
-
-  useEffect(() => {
-      if (user) {
-          setFormData({
-              name: user.name || '',
-              phone: user.phone || '',
-              vehicleType: user.profile?.vehicleType || 'car',
-              licenseNumber: user.profile?.licenseNumber || ''
-          });
-      }
-  }, [user]);
-
-  // Mock Settings States (Keeping mock as they aren't in Schema yet)
-  const [notifications, setNotifications] = useState({
-      email: true,
-      push: true,
-      hazards: true,
-      achievements: true
-  });
+  const { user } = useAuth();
   
-  const [privacy, setPrivacy] = useState({
-      publicProfile: true,
-      shareLocation: false
-  });
-
-  // Animation Variants
-  const tabVariants = {
-      hidden: { x: -20, opacity: 0 },
-      visible: { x: 0, opacity: 1 },
-      exit: { x: 20, opacity: 0 }
+  // Mock stats - in real app fetch from service
+  const userStats = {
+      reports: 42,
+      validations: 156,
+      xp: 12500,
+      safetyScore: 98
   };
-
-  const handleSave = async () => {
-      try {
-          await updateUserProfile(formData);
-          setIsEditing(false);
-      } catch (err) {
-          console.error(err);
-      }
-  };
-
-  const vehicleOptions = [
-      { value: 'car', label: 'Car' },
-      { value: 'bike', label: 'Bike' },
-      { value: 'scooter', label: 'Scooter' },
-      { value: 'truck', label: 'Truck' },
-      { value: 'other', label: 'Other' }
-  ];
 
   return (
-    <div className={styles.container}>
-      {/* Sidebar Navigation */}
-      <div className={styles.sidebar}>
-          <div className={styles.userInfo}>
-               <div className={styles.avatarWrapper}>
-                   <div className={styles.avatar}>{user?.name?.charAt(0) || 'U'}</div>
-                   <button className={styles.uploadBtn}><FaCamera /></button>
-               </div>
-               <h3>{user?.name || 'Safe Driver'}</h3>
-               <p>{user?.email || 'user@example.com'}</p>
-          </div>
-          
-          <nav className={styles.navMenu}>
-              {[
-                  { id: 'account', icon: FaUser, label: 'Account' },
-                  { id: 'notifications', icon: FaBell, label: 'Notifications' },
-                  { id: 'privacy', icon: FaShieldAlt, label: 'Privacy' },
-                  { id: 'appearance', icon: FaMoon, label: 'Appearance' },
-                  { id: 'about', icon: FaGlobe, label: 'About' }
-              ].map(item => (
-                  <button 
-                      key={item.id}
-                      className={`${styles.navItem} ${activeTab === item.id ? styles.active : ''}`}
-                      onClick={() => setActiveTab(item.id)}
-                  >
-                      <item.icon /> {item.label}
-                  </button>
-              ))}
-          </nav>
+    <div className="min-h-screen bg-bg-primary pt-24 pb-28 px-4 font-sans text-white overflow-x-hidden">
+      
+      {/* Cinematic Background Glow */}
+      <div className="fixed inset-0 pointer-events-none">
+         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-violet/10 rounded-full blur-[120px]"></div>
       </div>
 
-      {/* Main Content Area */}
-      <div className={styles.content}>
-          <div className={styles.header}>
-              <h2>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Settings</h2>
-          </div>
-          
-          <AnimatePresence mode='wait'>
-            <motion.div 
-               key={activeTab}
-               variants={tabVariants}
-               initial="hidden"
-               animate="visible"
-               exit="exit"
-               transition={{ duration: 0.2 }}
-               className={styles.tabPanel}
-            >
-                {/* ACCOUNT TAB */}
-                {activeTab === 'account' && (
-                    <div className={styles.panelContent}>
-                        <div className={styles.formGroup}>
-                            <label>Full Name</label>
-                            <input 
-                                type="text" 
-                                value={formData.name} 
-                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                className={styles.input} 
-                                disabled={!isEditing} 
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Email Address</label>
-                            <input type="email" value={user?.email || ''} className={styles.input} disabled />
-                            <small>Email cannot be changed</small>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Phone Number</label>
-                            <input 
-                                type="tel" 
-                                value={formData.phone} 
-                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                className={styles.input} 
-                                disabled={!isEditing} 
-                            />
-                        </div>
-                        
-                        <div className={styles.sectionHeader}>Vehicle Information</div>
-                        <div className={styles.formGroup}>
-                            <label>Vehicle Type</label>
-                            <Select 
-                                options={vehicleOptions}
-                                value={vehicleOptions.find(o => o.value === formData.vehicleType)}
-                                onChange={(val) => setFormData({...formData, vehicleType: val.value})}
-                                isDisabled={!isEditing}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>License Number</label>
-                            <input 
-                                type="text" 
-                                value={formData.licenseNumber} 
-                                onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
-                                className={styles.input} 
-                                disabled={!isEditing} 
-                            />
-                        </div>
-
-                        <div className={styles.actionRow}>
-                             {isEditing ? (
-                                 <button onClick={handleSave} className="btn btn-primary"><FaSave /> Save Changes</button>
-                             ) : (
-                                 <button onClick={() => setIsEditing(true)} className="btn btn-secondary"><FaEdit /> Edit Profile</button>
-                             )}
-                        </div>
+      <div className="relative z-10 max-w-2xl mx-auto space-y-10">
+         
+         {/* Task 1: Hero Section (Identity) */}
+         <motion.div 
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           className="flex flex-col items-center text-center"
+         >
+             <div className="relative">
+                 <div className="w-28 h-28 rounded-full border-4 border-bg-primary shadow-[0_0_40px_rgba(139,92,246,0.6)] overflow-hidden z-20 relative">
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-accent-violet flex items-center justify-center text-4xl font-bold">
+                        {user?.name?.charAt(0) || 'U'}
                     </div>
-                )}
+                 </div>
+                 {/* Violet Outer Glow Ring */}
+                 <div className="absolute inset-0 rounded-full border-2 border-accent-violet/50 blur-sm scale-110 z-10"></div>
+                 
+                 <Link to="/settings" className="absolute bottom-0 right-0 z-30 bg-bg-primary p-2 rounded-full border border-white/10 text-white hover:text-accent-violet transition-colors shadow-lg">
+                    <Settings size={18} />
+                 </Link>
+             </div>
 
-                {/* NOTIFICATIONS TAB */}
-                {activeTab === 'notifications' && (
-                    <div className={styles.panelContent}>
-                         <div className={styles.toggleRow}>
-                             <div>
-                                 <h4>Push Notifications</h4>
-                                 <p>Receive alerts on your device</p>
-                             </div>
-                             <label className={styles.switch}>
-                                 <input 
-                                    type="checkbox" 
-                                    checked={notifications.push} 
-                                    onChange={() => setNotifications({...notifications, push: !notifications.push})}
-                                 />
-                                 <span className={styles.slider}></span>
-                             </label>
+             <h1 className="text-3xl font-extrabold mt-6 text-white tracking-tight">
+                 {user?.name || 'Safe Driver'}
+             </h1>
+
+             {/* Scout Badge */}
+             <div className="mt-3 inline-flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md">
+                 <Shield size={14} className="text-accent-danger" fill="#F59E0B" />
+                 <span className="text-sm font-bold text-white tracking-wide">ELITE SCOUT</span>
+             </div>
+         </motion.div>
+
+         {/* Task 2: The Stats Grid */}
+         <div className="grid grid-cols-2 gap-4">
+             <StatCard 
+               label="Reports" 
+               value={userStats.reports} 
+               icon={MapPin} 
+               color="text-blue-400" 
+               delay={0.1}
+             />
+             <StatCard 
+               label="Validations" 
+               value={userStats.validations} 
+               icon={CheckCircle} 
+               color="text-green-400" 
+               delay={0.2} 
+             />
+             <StatCard 
+               label="Total XP" 
+               value={userStats.xp.toLocaleString()} 
+               icon={TrendingUp} 
+               color="text-accent-violet" 
+               delay={0.3} 
+             />
+             <StatCard 
+               label="Safety Score" 
+               value={userStats.safetyScore} 
+               icon={Award} 
+               color="text-accent-danger" 
+               delay={0.4} 
+             />
+         </div>
+
+         {/* Recent Activity Mini List (Optional filler) */}
+         <div>
+            <div className="flex items-center justify-between mb-4 px-2">
+               <h3 className="font-bold text-lg text-white">Recent Contributions</h3>
+               <button className="text-xs text-accent-violet font-semibold">View All</button>
+            </div>
+            <div className="space-y-3">
+               {[1, 2].map((_, i) => (
+                  <div key={i} className="glass-card p-4 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-colors group">
+                      <div className="flex items-center space-x-3">
+                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-text-secondary group-hover:text-white transition-colors">
+                            <MapPin size={18} />
                          </div>
-                         <div className={styles.toggleRow}>
-                             <div>
-                                 <h4>Email Updates</h4>
-                                 <p>Weekly digest and promotions</p>
-                             </div>
-                             <label className={styles.switch}>
-                                 <input 
-                                    type="checkbox" 
-                                    checked={notifications.email} 
-                                    onChange={() => setNotifications({...notifications, email: !notifications.email})}
-                                 />
-                                 <span className={styles.slider}></span>
-                             </label>
+                         <div>
+                            <div className="font-semibold text-sm">Pothole on Main St</div>
+                            <div className="text-xs text-text-secondary">Confirmed 2h ago</div>
                          </div>
-                    </div>
-                )}
+                      </div>
+                      <div className="text-accent-violet font-bold text-sm">+20 XP</div>
+                  </div>
+               ))}
+            </div>
+         </div>
 
-                {/* PRIVACY TAB */}
-                {activeTab === 'privacy' && (
-                    <div className={styles.panelContent}>
-                        <div className={styles.radioGroup}>
-                             <label>Profile Visibility</label>
-                             <div className={styles.radioOption}>
-                                 <input type="radio" name="vis" checked={privacy.publicProfile} onChange={() => {}} />
-                                 <span>Public (Everyone)</span>
-                             </div>
-                             <div className={styles.radioOption}>
-                                 <input type="radio" name="vis" />
-                                 <span>Community (Users only)</span>
-                             </div>
-                        </div>
-
-                        <div className={styles.dangerZone}>
-                             <h4>Danger Zone</h4>
-                             <button className={`${styles.btnDanger} btn`}><FaTrash /> Delete Account</button>
-                        </div>
-                    </div>
-                )}
-            </motion.div>
-          </AnimatePresence>
       </div>
     </div>
   );
 };
+
+const StatCard = ({ label, value, icon: Icon, color, delay }) => (
+    <motion.div
+       initial={{ opacity: 0, y: 20 }}
+       animate={{ opacity: 1, y: 0 }}
+       transition={{ delay }}
+       className="glass-card relative p-6 rounded-2xl overflow-hidden group hover:bg-white/5 transition-colors"
+    >
+        {/* Subtle Violet Corner Glow */}
+        <div className="absolute top-0 right-0 w-16 h-16 bg-accent-violet/10 blur-[30px] -mr-8 -mt-8 rounded-full"></div>
+
+        <div className={`mb-3 ${color}`}>
+            <Icon size={24} />
+        </div>
+        <div className="text-2xl font-extrabold text-white mb-1 tracking-tight">{value}</div>
+        <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{label}</div>
+    </motion.div>
+);
 
 export default Profile;

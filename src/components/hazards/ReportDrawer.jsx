@@ -81,29 +81,29 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-50 glass-card rounded-t-3xl max-h-[85vh] overflow-y-auto"
           >
-            {/* Handle */}
-            <div className="sticky top-0 bg-[#0D0D0D]/80 backdrop-blur-xl pt-3 pb-4 px-6 border-b border-white/10">
-              <div className="w-12 h-1.5 bg-white/30 rounded-full mx-auto mb-4" />
+            {/* Handle & Header - Solid Background for Readability */}
+            <div className="sticky top-0 bg-[#050505] z-10 pt-3 pb-4 px-6 border-b border-white/10 shadow-xl">
+              <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4" />
               
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-display font-bold text-white">Quick Report</h2>
+                  <h2 className="text-2xl font-display font-bold text-white tracking-tight">Quick Report</h2>
                   <p className="text-sm text-gray-400 mt-1">Help keep roads safe for everyone</p>
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200"
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200"
                 >
                   <X size={20} className="text-white" />
                 </button>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
+            {/* Content - Added pb-32 for Button Visibility */}
+            <div className="p-6 pb-32 space-y-8 bg-[#050505]">
               {/* Hazard Type Selection */}
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-gray-300">Select Hazard Type</label>
+                <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Select Hazard Type</label>
                 <div className="grid grid-cols-2 gap-3">
                   {hazardTypes.map((type) => {
                     const Icon = iconMap[type.id] || AlertTriangle;
@@ -116,7 +116,7 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
                         whileTap={{ scale: 0.95 }}
                         className={`relative p-4 rounded-2xl transition-all duration-200 ${
                           isSelected
-                            ? 'bg-white/10 border-2'
+                            ? 'bg-white/10 border-2 shadow-lg shadow-violet-500/10'
                             : 'bg-white/5 border border-white/10 hover:bg-white/10'
                         }`}
                         style={{
@@ -130,6 +130,7 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
                             }`}
                             style={{
                               backgroundColor: isSelected ? type.color : 'rgba(255,255,255,0.1)',
+                              boxShadow: isSelected ? `0 0 20px ${type.color}40` : 'none'
                             }}
                           >
                             <Icon size={24} className="text-white" />
@@ -148,9 +149,9 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center"
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm"
                           >
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: type.color }} />
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color }} />
                           </motion.div>
                         )}
                       </motion.button>
@@ -162,20 +163,20 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
               {/* Severity Selection */}
               {selectedType && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3"
                 >
-                  <label className="text-sm font-semibold text-gray-300">Severity Level</label>
+                  <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Severity Level</label>
                   <div className="flex space-x-2">
                     {['low', 'medium', 'high', 'critical'].map((level) => (
                       <button
                         key={level}
                         onClick={() => setSeverity(level)}
-                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-200 border ${
                           severity === level
-                            ? 'bg-[#8B5CF6] text-white scale-105'
-                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                            ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-lg shadow-violet-500/20'
+                            : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
                         }`}
                       >
                         {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -188,20 +189,20 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
               {/* Description */}
               {selectedType && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   className="space-y-3"
                 >
-                  <label className="text-sm font-semibold text-gray-300">
-                    Additional Details (Optional)
+                  <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                    Additional Details
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the hazard..."
+                    placeholder="Provide more details about this hazard..."
                     rows={3}
-                    className="glass-input w-full resize-none"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-accent-violet transition-colors placeholder-gray-600 resize-none"
                   />
                 </motion.div>
               )}
@@ -209,10 +210,12 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
               {/* Location Info */}
               {userLocation && (
                 <div className="flex items-center space-x-3 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <MapPin size={20} className="text-[#8B5CF6]" />
+                  <div className="w-10 h-10 rounded-full bg-[#8B5CF6]/20 flex items-center justify-center text-[#8B5CF6]">
+                     <MapPin size={20} />
+                  </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-white">Current Location</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">
                       {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
                     </p>
                   </div>
@@ -223,7 +226,11 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
               <button
                 onClick={handleSubmit}
                 disabled={!selectedType || isSubmitting}
-                className="btn-violet w-full py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full py-4 text-lg font-bold rounded-xl transition-all shadow-lg active:scale-95 ${
+                    !selectedType || isSubmitting 
+                    ? 'bg-white/10 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-accent-violet to-indigo-600 text-white shadow-violet-500/30 hover:shadow-violet-500/50'
+                }`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">

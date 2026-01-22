@@ -4,11 +4,11 @@ import L from 'leaflet';
 import PropTypes from 'prop-types';
 import 'leaflet/dist/leaflet.css';
 
-// Custom dark mode tile layer
+// Custom dark mode tile layer (CartoDB Dark Matter)
 const DARK_MODE_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const DARK_MODE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const DARK_MODE_ATTRIBUTION = '&copy; OpenStreetMap &copy; CARTO';
 
-const defaultCenter = [28.6139, 77.2090];
+const defaultCenter = [28.6139, 77.2090]; // New Delhi Fallback
 
 // Map updater for smooth animations
 const MapUpdater = ({ center, selectedHazard }) => {
@@ -20,8 +20,11 @@ const MapUpdater = ({ center, selectedHazard }) => {
         selectedHazard.location.coordinates[1],
         selectedHazard.location.coordinates[0],
       ];
-      map.flyTo(pos, 17, { duration: 1.5 });
+      map.flyTo(pos, 17, { duration: 1.5, easeLinearity: 0.25 });
     } else if (center) {
+      // Don't fly on every small update, maybe pan?
+      // flyTo is good for big jumps. For tracking, maybe setView or panTo is better?
+      // But flyTo is cinematically smooth.
       map.flyTo(center, map.getZoom(), { duration: 1 });
     }
   }, [center, selectedHazard, map]);
@@ -43,36 +46,39 @@ const MapContent = ({
   onMarkerClick,
   mapRef,
 }) => {
-  // Create pulse circle markers for hazards
+  
   const getMarkerIcon = (type, severity) => {
-    let color = '#EF4444'; // Default red for accidents
-    
-    if (type === 'pothole' || type === 'roadblock') color = '#F59E0B'; // Amber
-    if (type === 'police' || type === 'police_checking') color = '#3B82F6'; // Blue
-    if (type === 'waterlogging') color = '#06B6D4'; // Cyan
+    let color = '#EF4444'; // Red (Accident/Critical)
+    let emoji = '⚠️';
 
-    const size = severity === 'critical' ? 28 : severity === 'high' ? 24 : 20;
-    const pulseAnimation = severity === 'critical' || severity === 'high';
+    switch (type) {
+        case 'pothole': color = '#F59E0B'; emoji = '🕳️'; break;
+        case 'roadblock': color = '#F59E0B'; emoji = '🚧'; break;
+        case 'police': 
+        case 'police_checking': color = '#3B82F6'; emoji = '👮'; break;
+        case 'waterlogging': color = '#06B6D4'; emoji = '🌊'; break;
+        case 'construction': color = '#F97316'; emoji = '🏗️'; break;
+        case 'accident': color = '#EF4444'; emoji = '🚨'; break;
+        default: break;
+    }
+
+    // Critical/High severity -> Larger ripple
+    const isPulse = severity === 'critical' || severity === 'high';
 
     return L.divIcon({
-      className: 'custom-marker',
+      className: 'custom-marker', // Base class to remove leaflet defaults
       html: `
-        <div class="marker-container">
-          <div class="marker-pulse ${pulseAnimation ? 'animate-pulse-ring' : ''}" 
-               style="background-color: ${color}; width: ${size}px; height: ${size}px;">
-          </div>
-          <div class="marker-glow" 
-               style="background-color: ${color}; width: ${size}px; height: ${size}px; 
-                      filter: blur(8px) drop-shadow(0 0 12px ${color});">
-          </div>
+        <div class="epicenter-marker" style="color: ${color}">
+          <div class="epicenter-core">${emoji}</div>
+          ${isPulse ? '<div class="epicenter-ripple pulse-animation"></div>' : '<div class="epicenter-ripple" style="width: 40px; height: 40px; opacity: 0.1;"></div>'}
         </div>
       `,
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
+      iconSize: [40, 40],
+      iconAnchor: [20, 20], // Center it
     });
   };
 
-  // User location marker - pulsing blue dot
+  // User location marker
   const userIcon = L.divIcon({
     className: 'custom-marker',
     html: `
@@ -87,7 +93,6 @@ const MapContent = ({
 
   return (
     <>
-      {/* Dark Mode Tile Layer */}
       <TileLayer
         attribution={DARK_MODE_ATTRIBUTION}
         url={DARK_MODE_TILES}
@@ -101,9 +106,9 @@ const MapContent = ({
       {/* User Location Marker */}
       {userLocation && (
         <Marker
-          position={[userLocation.lat, userLocation.lng]}
-          icon={userIcon}
-          zIndexOffset={1000}
+            position={[userLocation.lat, userLocation.lng]}
+            icon={userIcon}
+            zIndexOffset={1000}
         />
       )}
 
@@ -119,16 +124,6 @@ const MapContent = ({
           eventHandlers={{
             click: () => {
               if (onMarkerClick) onMarkerClick(hazard);
-              if (mapRef.current) {
-                mapRef.current.flyTo(
-                  [
-                    hazard.location.coordinates[1],
-                    hazard.location.coordinates[0],
-                  ],
-                  17,
-                  { duration: 1.5 }
-                );
-              }
             },
           }}
         />
@@ -160,10 +155,10 @@ const HazardMap = ({
     : defaultCenter;
 
   return (
-    <div className="absolute inset-0 w-full h-full">
+    <div className="absolute inset-0 w-full h-full bg-bg-primary">
       <MapContainer
         center={center}
-        zoom={15}
+        zoom={16} // Closer zoom for city driving
         style={{ width: '100%', height: '100%' }}
         zoomControl={false}
         attributionControl={false}

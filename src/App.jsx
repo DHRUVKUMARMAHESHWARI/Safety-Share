@@ -10,6 +10,7 @@ import MapPage from './pages/Map';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
+import Settings from './pages/Settings';
 import PropTypes from 'prop-types';
 import { Toaster } from 'react-hot-toast';
 import { AlertProvider } from './context/AlertContext/AlertContext';
@@ -85,6 +86,15 @@ const AppRoutes = () => {
                element={
                    <ProtectedRoute>
                        <Profile />
+                   </ProtectedRoute>
+               }
+             />
+
+             <Route
+               path="/settings"
+               element={
+                   <ProtectedRoute>
+                       <Settings />
                    </ProtectedRoute>
                }
              />

@@ -17,11 +17,13 @@ export const getNearbyHazards = async (lat, lng, radiusKm = 5) => {
   return response.data;
 };
 
-export const validateHazard = async (id, action, location) => {
-  const response = await api.post(`/hazards/${id}/validate`, { 
-      action, 
-      location: { lat: location.lat, lng: location.lng } 
-  });
+export const validateHazard = async (id, action, location = null) => {
+  const payload = { action };
+  if (location) {
+      payload.location = { lat: location.lat, lng: location.lng };
+  }
+  
+  const response = await api.post(`/hazards/${id}/validate`, payload);
   return response.data;
 };
 

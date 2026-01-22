@@ -61,7 +61,18 @@ AdminRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+import { subscribeToPushNotifications } from './services/pushService';
+import { useEffect } from 'react';
+
 const AppRoutes = () => {
+    const { user } = useAuth();
+    
+    useEffect(() => {
+        if (user) {
+            subscribeToPushNotifications();
+        }
+    }, [user]);
+
     return (
       <MainLayout>
         <Navbar />

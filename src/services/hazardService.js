@@ -2,11 +2,7 @@ import api from './api';
 
 export const reportHazard = async (formData) => {
   // formData should be a FormData object if sending files
-  const response = await api.post('/hazards/report', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await api.post('/hazards/report', formData);
   return response.data;
 };
 

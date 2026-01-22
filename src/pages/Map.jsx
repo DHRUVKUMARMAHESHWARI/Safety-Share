@@ -13,7 +13,7 @@ const HAZARD_TYPES = [
   { id: 'pothole', label: 'Pothole', color: '#F59E0B', emoji: '🕳️' },
   { id: 'accident', label: 'Accident', color: '#EF4444', emoji: '🚨' },
   { id: 'roadblock', label: 'Roadblock', color: '#F59E0B', emoji: '🚧' },
-  { id: 'police', label: 'Police', color: '#3B82F6', emoji: '👮' },
+  { id: 'police_checking', label: 'Police', color: '#3B82F6', emoji: '👮' },
   { id: 'waterlogging', label: 'Water Logging', color: '#06B6D4', emoji: '🌊' },
   { id: 'construction', label: 'Construction', color: '#F97316', emoji: '🏗️' },
 ];
@@ -30,7 +30,7 @@ const MapPage = () => {
   const [isReportDrawerOpen, setIsReportDrawerOpen] = useState(false);
   const [selectedHazard, setSelectedHazard] = useState(null);
   const [filters, setFilters] = useState({
-    pothole: true, accident: true, roadblock: true, waterlogging: true, police: true, construction: true
+    pothole: true, accident: true, roadblock: true, waterlogging: true, police_checking: true, construction: true
   });
 
   // Handle Query Params
@@ -80,28 +80,42 @@ const MapPage = () => {
       };
   }, [startWatchingLocation]);
 
+  const [recenterKey, setRecenterKey] = useState(0);
+
   // Recenter Handler
   const handleRecenter = () => {
+      // 1. Immediately recenter to known location if available
       if (userLocation) {
-          // Force MapUpdater to see a change or just rely on passed prop if HazardMap handles it
-          // Actually, we pass userLocation to HazardMap. 
-          // If we want to force flyTo, we might need to temporarily clear center or set a flag,
-          // OR better: call getCurrentPosition again to ensure freshness and update state
-          toast('Locating...', { icon: '🛰️' });
-          navigator.geolocation.getCurrentPosition(
-              (pos) => {
-                  setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                  // HazardMap detects change in userLocation and usually centers if logic allows
-                  // We can pass a "forceCenter" prop or timestamp if needed, but usually update is enough
-              },
-              (err) => {
-                  toast.error("Couldn't find you. Check GPS settings.");
-              },
-              { enableHighAccuracy: true, timeout: 5000 }
-          );
+          setRecenterKey(prev => prev + 1);
       } else {
-          startWatchingLocation(); // Try restarting the watch
+          startWatchingLocation();
       }
+
+      toast('Locating...', { icon: '🛰️' });
+
+      // 2. Try to get a fresh high-accuracy position
+      navigator.geolocation.getCurrentPosition(
+          (pos) => {
+              setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          },
+          (err) => {
+              console.warn('High accuracy recenter failed', err);
+              // 3. Fallback to low accuracy
+              navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                       setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                  },
+                  (error) => {
+                      // Only error if we strictly needed a location (i.e. we don't have one yet)
+                      if (!userLocation) {
+                          toast.error("Couldn't find you. Check GPS settings.");
+                      }
+                  },
+                  { enableHighAccuracy: false, timeout: 10000 }
+              );
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+      );
   };
 
   const fetchHazards = useCallback(async () => {
@@ -123,11 +137,7 @@ const MapPage = () => {
   }, [userLocation, fetchHazards]);
 
   const toggleFilter = (type) => setFilters(prev => ({...prev, [type]: !prev[type]}));
-  const displayedHazards = hazards.filter(h => {
-      // Handle snake_case to matches keys in filters
-      const key = h.type === 'police_checking' ? 'police' : h.type;
-      return filters[key] !== false;
-  });
+  const displayedHazards = hazards.filter(h => filters[h.type] !== false);
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-bg-primary">
@@ -140,7 +150,7 @@ const MapPage = () => {
            onMarkerClick={(h) => setSelectedHazard(h)}
            selectedHazard={selectedHazard}
            // Pass timestamp to force re-render/center if strictly needed, or handle in component
-           recenterTrigger={Date.now()} 
+           recenterTrigger={recenterKey} 
          />
          {/* Subtle Overlay */}
          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-bg-primary/20 via-transparent to-transparent h-32"></div>

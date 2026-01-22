@@ -15,7 +15,7 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
     pothole: Construction,
     accident: AlertTriangle,
     roadblock: AlertTriangle,
-    police: Shield,
+    police_checking: Shield,
   };
 
   const handleTypeSelect = (typeId) => {
@@ -35,16 +35,17 @@ const ReportDrawer = ({ isOpen, onClose, userLocation, onSuccess, hazardTypes })
 
     setIsSubmitting(true);
 
+    const formData = new FormData();
+    formData.append('type', selectedType);
+    formData.append('severity', severity);
+    formData.append('description', description || `${selectedType} reported`);
+    formData.append('location', JSON.stringify({
+      lat: userLocation.lat,
+      lng: userLocation.lng
+    }));
+
     try {
-      await reportHazard({
-        type: selectedType,
-        severity,
-        description: description || `${selectedType} reported`,
-        location: {
-          type: 'Point',
-          coordinates: [userLocation.lng, userLocation.lat]
-        }
-      });
+      await reportHazard(formData);
 
       toast.success('Hazard reported successfully!');
       setSelectedType(null);

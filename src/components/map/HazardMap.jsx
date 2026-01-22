@@ -11,7 +11,8 @@ const DARK_MODE_ATTRIBUTION = '&copy; OpenStreetMap &copy; CARTO';
 const defaultCenter = [28.6139, 77.2090]; // New Delhi Fallback
 
 // Map updater for smooth animations
-const MapUpdater = ({ center, selectedHazard }) => {
+// Map updater for smooth animations
+const MapUpdater = ({ center, selectedHazard, recenterTrigger }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -27,7 +28,7 @@ const MapUpdater = ({ center, selectedHazard }) => {
       // But flyTo is cinematically smooth.
       map.flyTo(center, map.getZoom(), { duration: 1 });
     }
-  }, [center, selectedHazard, map]);
+  }, [center, selectedHazard, map, recenterTrigger]);
 
   return null;
 };
@@ -35,6 +36,7 @@ const MapUpdater = ({ center, selectedHazard }) => {
 MapUpdater.propTypes = {
   center: PropTypes.array,
   selectedHazard: PropTypes.object,
+    recenterTrigger: PropTypes.any,
 };
 
 // Main map content component
@@ -45,6 +47,7 @@ const MapContent = ({
   selectedHazard,
   onMarkerClick,
   mapRef,
+    recenterTrigger,
 }) => {
   
   const getMarkerIcon = (type, severity) => {
@@ -101,6 +104,7 @@ const MapContent = ({
       <MapUpdater
         center={!selectedHazard ? center : null}
         selectedHazard={selectedHazard}
+            recenterTrigger={recenterTrigger}
       />
 
       {/* User Location Marker */}
@@ -139,6 +143,7 @@ MapContent.propTypes = {
   selectedHazard: PropTypes.object,
   onMarkerClick: PropTypes.func,
   mapRef: PropTypes.object,
+    recenterTrigger: PropTypes.any,
 };
 
 const HazardMap = ({
@@ -147,6 +152,7 @@ const HazardMap = ({
   onMapLoad,
   onMarkerClick,
   selectedHazard,
+    recenterTrigger,
 }) => {
   const mapRef = useRef(null);
 
@@ -174,6 +180,7 @@ const HazardMap = ({
           selectedHazard={selectedHazard}
           onMarkerClick={onMarkerClick}
           mapRef={mapRef}
+          recenterTrigger={recenterTrigger}
         />
       </MapContainer>
     </div>

@@ -54,12 +54,20 @@ const MapPage = () => {
       };
 
       const error = (err) => {
-          console.warn('High Accuracy Geo failed, retrying low accuracy...', err);
+          console.warn('High Accuracy Geo failed:', err);
+          if (err.code === 1) {
+             // Permission Denied
+             toast.error('Location access denied. Please enable it in site settings.');
+             return;
+          }
           if (err.code === 3) { // Timeout
               // Retry with low accuracy
                navigator.geolocation.getCurrentPosition(
                   success, 
-                  (e) => toast.error('Location failed: ' + e.message),
+                  (e) => {
+                    if(e.code === 1) toast.error('Location access denied.');
+                    else console.warn('Low accuracy geo failed', e);
+                  },
                   { enableHighAccuracy: false, timeout: 10000 }
                );
           }
@@ -100,6 +108,12 @@ const MapPage = () => {
           },
           (err) => {
               console.warn('High accuracy recenter failed', err);
+              
+              if (err.code === 1) {
+                  toast.error('Location access denied. Please reset permissions.');
+                  return; // Don't retry if denied
+              }
+
               // 3. Fallback to low accuracy
               navigator.geolocation.getCurrentPosition(
                   (pos) => {
@@ -108,7 +122,8 @@ const MapPage = () => {
                   (error) => {
                       // Only error if we strictly needed a location (i.e. we don't have one yet)
                       if (!userLocation) {
-                          toast.error("Couldn't find you. Check GPS settings.");
+                          if (error.code === 1) toast.error("Location access denied.");
+                          else toast.error("Couldn't find you. Check GPS settings.");
                       }
                   },
                   { enableHighAccuracy: false, timeout: 10000 }

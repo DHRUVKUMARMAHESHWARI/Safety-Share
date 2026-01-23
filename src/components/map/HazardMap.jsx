@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, Circle, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import PropTypes from 'prop-types';
 import 'leaflet/dist/leaflet.css';
@@ -166,32 +166,7 @@ const MapContent = ({
               },
             }}
           >
-            <Popup>
-              <div className="min-w-[200px] p-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-base font-bold text-gray-900">
-                    {formatType(hazard.type)}
-                  </h3>
-                  <span 
-                    className="px-2 py-1 text-xs font-semibold rounded-full"
-                    style={{ 
-                      backgroundColor: getSeverityColor(hazard.severity) + '20',
-                      color: getSeverityColor(hazard.severity)
-                    }}
-                  >
-                    {hazard.severity}
-                  </span>
-                </div>
-                {hazard.description && (
-                  <p className="text-sm text-gray-700 mb-2">{hazard.description}</p>
-                )}
-                {hazard.reportedAt && (
-                  <p className="text-xs text-gray-500">
-                    Reported: {new Date(hazard.reportedAt).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </Popup>
+
           </Marker>
         );
       })}

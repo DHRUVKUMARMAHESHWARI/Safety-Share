@@ -39,97 +39,79 @@ const MapPage = () => {
     if (params.get('report') === 'true') setIsReportDrawerOpen(true);
   }, [location.search]);
 
-  // Robust Geolocation Handler
-  const startWatchingLocation = useCallback(() => {
-      if (!navigator.geolocation) {
-          toast.error('Geolocation not supported');
-          return;
-      }
+  // Robust Geolocation Handler (Refined)
+  const getLocation = useCallback((onSuccess, onError) => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not supported');
+      return;
+    }
 
-      // Clear existing watch if any
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+    const optionsHigh = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+    const optionsLow = { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 };
 
-      const success = (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      };
-
-      const error = (err) => {
-          console.warn('High Accuracy Geo failed:', err);
-          if (err.code === 1) {
-             // Permission Denied
-             toast.error('Location access denied. Please enable it in site settings.');
-             return;
-          }
-          if (err.code === 3) { // Timeout
-              // Retry with low accuracy
-               navigator.geolocation.getCurrentPosition(
-                  success, 
-                  (e) => {
-                    if(e.code === 1) toast.error('Location access denied.');
-                    else console.warn('Low accuracy geo failed', e);
-                  },
-                  { enableHighAccuracy: false, timeout: 10000 }
-               );
-          }
-      };
-
-      // Try High Accuracy first
-      watchIdRef.current = navigator.geolocation.watchPosition(
-          success,
-          error,
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-      );
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      (err) => {
+        console.warn('High Accuracy Geo failed:', err);
+        if (err.code === 3) { // Timeout
+          // Retry with low accuracy
+          console.log("Retrying with low accuracy...");
+          navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            (errLow) => {
+              if (errLow.code === 1) toast.error('Location access denied.');
+              else if (onError) onError(errLow);
+            },
+            optionsLow
+          );
+        } else {
+             if (err.code === 1) toast.error('Location access denied. Please enable it in site settings.');
+             else if (onError) onError(err);
+        }
+      },
+      optionsHigh
+    );
   }, []);
 
+
+
+  // Start watching ONLY after we have initial permission/location
+  const startWatching = useCallback(() => {
+     if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+     
+     watchIdRef.current = navigator.geolocation.watchPosition(
+         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+         (err) => console.warn("Watch Error:", err),
+         { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+     );
+  }, []);
+
+  // Cleanup watch on unmount
   useEffect(() => {
-      startWatchingLocation();
       return () => {
           if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       };
-  }, [startWatchingLocation]);
+  }, []);
 
   const [recenterKey, setRecenterKey] = useState(0);
 
-  // Recenter Handler
+  // Recenter Handler (User Initiated)
   const handleRecenter = () => {
-      // 1. Immediately recenter to known location if available
-      if (userLocation) {
-          setRecenterKey(prev => prev + 1);
-      } else {
-          startWatchingLocation();
-      }
-
       toast('Locating...', { icon: '🛰️' });
 
-      // 2. Try to get a fresh high-accuracy position
-      navigator.geolocation.getCurrentPosition(
-          (pos) => {
-              setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          },
-          (err) => {
-              console.warn('High accuracy recenter failed', err);
-              
-              if (err.code === 1) {
-                  toast.error('Location access denied. Please reset permissions.');
-                  return; // Don't retry if denied
-              }
-
-              // 3. Fallback to low accuracy
-              navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                       setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                  },
-                  (error) => {
-                      // Only error if we strictly needed a location (i.e. we don't have one yet)
-                      if (!userLocation) {
-                          if (error.code === 1) toast.error("Location access denied.");
-                          else toast.error("Couldn't find you. Check GPS settings.");
-                      }
-                  },
-                  { enableHighAccuracy: false, timeout: 10000 }
-              );
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
+      getLocation(
+        (pos) => {
+          const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(newLoc);
+          setRecenterKey(prev => prev + 1);
+          
+          // Start watching for continuous updates now that we have permission
+          startWatching();
+        },
+        (err) => {
+           console.error("Final location error:", err);
+           toast.error("Could not fetch location. Ensure GPS is on.");
+        }
       );
   };
 

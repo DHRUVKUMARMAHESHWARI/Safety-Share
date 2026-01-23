@@ -1,9 +1,8 @@
-const CACHE_NAME = 'saferoute-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest'
-];
+import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
+
+cleanupOutdatedCaches()
+
+precacheAndRoute(self.__WB_MANIFEST)
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

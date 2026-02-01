@@ -46,8 +46,8 @@ const MapPage = () => {
       return;
     }
 
-    const optionsHigh = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
-    const optionsLow = { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 };
+    const optionsHigh = { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 };
+    const optionsLow = { enableHighAccuracy: false, timeout: 20000, maximumAge: 30000 };
 
     navigator.geolocation.getCurrentPosition(
       onSuccess,
@@ -114,6 +114,12 @@ const MapPage = () => {
         }
       );
   };
+
+  // Auto-locate on mount
+  useEffect(() => {
+    handleRecenter();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchHazards = useCallback(async () => {
     if (!userLocation) return;

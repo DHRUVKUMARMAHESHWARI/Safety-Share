@@ -13,6 +13,7 @@ import Leaderboard from './pages/Leaderboard';
 import Settings from './pages/Settings';
 import PropTypes from 'prop-types';
 import { Toaster } from 'react-hot-toast';
+import NotificationManager from './components/notifications/NotificationManager';
 import { AlertProvider } from './context/AlertContext/AlertContext';
 import AlertOverlay from './components/alerts/AlertOverlay';
 
@@ -144,6 +145,8 @@ const App = () => {
             <InstallPrompt />
             <AlertOverlay />
             <AppRoutes />
+            <Toaster position="top-center" />
+            <NotificationManager />
         </AlertProvider>
       </AuthProvider>
     </Router>

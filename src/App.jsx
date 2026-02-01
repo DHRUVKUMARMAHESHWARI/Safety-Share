@@ -146,7 +146,7 @@ const App = () => {
             <AlertOverlay />
             <AppRoutes />
             <Toaster position="top-center" />
-            <NotificationManager />
+            {/* <NotificationManager /> */}
         </AlertProvider>
       </AuthProvider>
     </Router>

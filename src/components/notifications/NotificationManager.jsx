@@ -30,7 +30,7 @@ const NotificationManager = () => {
 
     return (
         <div className="fixed bottom-20 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
-            <div className="bg-[#1e1e1e] border border-white/10 rounded-xl p-4 shadow-xl flex items-center justify-between">
+            {/* <div className="bg-[#1e1e1e] border border-white/10 rounded-xl p-4 shadow-xl flex items-center justify-between">
                 <div>
                     <h4 className="text-white font-bold text-sm">Enable Alerts</h4>
                     <p className="text-gray-400 text-xs">Get notified about nearby hazards.</p>
@@ -41,7 +41,7 @@ const NotificationManager = () => {
                 >
                     Enable
                 </button>
-            </div>
+            </div> */}
         </div>
     );
 };
